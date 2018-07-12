@@ -17,6 +17,12 @@ if (!word) {
 	process.exit()
 }
 
+let word_arr = word.split(' ')
+if (word_arr.length > 1) {
+	save_word(word_arr)
+	return
+}
+
 const spinner = new Spinner('努力查询中... %s')
 
 if (config.spinner) {
@@ -35,6 +41,7 @@ const options = {
 }
 
 const ColorOutput = chalk.keyword(config.color)
+
 request(options, (error, response, body) => {
 	if (error) {
 		console.error(error)
@@ -47,7 +54,7 @@ request(options, (error, response, body) => {
 	console.log(ColorOutput(output))
 
 	if (!isCN && output) {
-		save_word(word)
+		save_word([word])
 	}
 })
 
@@ -57,15 +64,19 @@ function save_word (word) {
 	if (!fs.existsSync(word_path)) {
 		fs.appendFileSync(word_path, JSON.stringify([]))
 	}
-
+	
 	let file = fs.readFileSync(word_path, {encoding: 'utf8'})
 	file = JSON.parse(file)
 	
-	if (file.includes(word)) return
+	let add = 0
+	word.forEach((item) => {
+		if (file.includes(item)) return
+		add++
+		file.push(item)
+	})
 
-	file.push(word)
 	fs.writeFile(word_path, JSON.stringify(file), () => {
-		console.log('write success:', file.length)
+		console.log('write success: %s; total: %s;', add, file.length)
 	})
 	
 }
